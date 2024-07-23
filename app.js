@@ -12,49 +12,70 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const express = require('express');
-const {redisClient, getRoomFromCache, addMessageToCache} = require('./redis');
-const {addUser, getUser, deleteUser} = require('./users');
+const express = require("express");
+const { redisClient, getRoomFromCache, addMessageToCache } = require("./redis");
+const { addUser, getUser, deleteUser } = require("./users");
 
 const app = express();
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + "/public"));
+app.use(bodyParser.json());
 
 // Serve frontend
-app.get('/', async (req, res) => {
-  res.render('index');
+app.get("/", async (req, res) => {
+  res.render("index");
+});
+app.post("/toEmit", async (req, res) => {
+  console.log("receiving data ...");
+  console.log("body is ", req.body);
+  if (req.body.to) {
+    for (const toElement of req.body.to) {
+      io.to(toElement).emit(req.body.event.name, req.body.event.data);
+    }
+  } else {
+    io.emit(req.body.event.name, req.body.event.data);
+  }
+
+  res.send({ msg: "Enviado con exito" });
 });
 
 // [START cloudrun_websockets_server]
 // Initialize Socket.io
-const server = require('http').Server(app);
-const io = require('socket.io')(server);
+const server = require("http").Server(app);
+const io = require("socket.io")(server);
 
 // [START cloudrun_websockets_redis_adapter]
-const {createAdapter} = require('@socket.io/redis-adapter');
+const { createAdapter } = require("@socket.io/redis-adapter");
 // Replace in-memory adapter with Redis
 const subClient = redisClient.duplicate();
 io.adapter(createAdapter(redisClient, subClient));
 // [END cloudrun_websockets_redis_adapter]
 // Add error handlers
-redisClient.on('error', err => {
+redisClient.on("error", (err) => {
   console.error(err.message);
 });
 
-subClient.on('error', err => {
+subClient.on("error", (err) => {
   console.error(err.message);
 });
 
 // Listen for new connection
-io.on('connection', socket => {
+io.on("connection", (socket) => {
+  const { token, userId } = socket.handshake.query;
+
+  if (userId) {
+    addConnectedUser(+userId);
+    io.emit("usersPresenceList", getConnectedUsers());
+  }
+
   // Add listener for "signin" event
-  socket.on('signin', async ({user, room}, callback) => {
+  socket.on("signin", async ({ user, room }, callback) => {
     try {
       // Record socket ID to user's name and chat room
       addUser(socket.id, user, room);
       // Call join to subscribe the socket to a given channel
       socket.join(room);
       // Emit notification event
-      socket.in(room).emit('notification', {
+      socket.in(room).emit("notification", {
         title: "Someone's here",
         description: `${user} just entered the room`,
       });
@@ -70,7 +91,7 @@ io.on('connection', socket => {
 
   // [START cloudrun_websockets_update_socket]
   // Add listener for "updateSocketId" event
-  socket.on('updateSocketId', async ({user, room}) => {
+  socket.on("updateSocketId", async ({ user, room }) => {
     try {
       addUser(socket.id, user, room);
       socket.join(room);
@@ -81,29 +102,49 @@ io.on('connection', socket => {
   // [END cloudrun_websockets_update_socket]
 
   // Add listener for "sendMessage" event
-  socket.on('sendMessage', (message, callback) => {
+  socket.on("sendMessage", (message, callback) => {
     // Retrieve user's name and chat room  from socket ID
-    const {user, room} = getUser(socket.id);
+    const { user, room } = getUser(socket.id);
     if (room) {
-      const msg = {user, text: message};
+      const msg = { user, text: message };
       // Push message to clients in chat room
-      io.in(room).emit('message', msg);
+      io.in(room).emit("message", msg);
       addMessageToCache(room, msg);
       callback();
     } else {
-      callback('User session not found.');
+      callback("User session not found.");
     }
   });
 
+  socket.on("joinChatBox", (ticketId) => {
+    //logger.info("A client joined a ticket channel");
+    socket.join(ticketId);
+  });
+
+  socket.on("joinNotification", () => {
+    //logger.info("A client joined notification channel");
+    socket.join("notification");
+  });
+
+  socket.on("joinTickets", (status) => {
+    //logger.info(`A client joined to ${status} tickets channel.`);
+    socket.join(status);
+  });
+
   // Add listener for disconnection
-  socket.on('disconnect', () => {
+  socket.on("disconnect", () => {
     // Remove socket ID from list
-    const {user, room} = deleteUser(socket.id);
+    const { user, room } = deleteUser(socket.id);
     if (user) {
-      io.in(room).emit('notification', {
-        title: 'Someone just left',
+      io.in(room).emit("notification", {
+        title: "Someone just left",
         description: `${user} just left the room`,
       });
+    }
+
+    if (userId) {
+      removeConnectedUser(+userId);
+      io.emit("usersPresenceList", getConnectedUsers());
     }
   });
 });
