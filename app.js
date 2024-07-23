@@ -13,12 +13,14 @@
 // limitations under the License.
 
 const express = require("express");
+
 const { redisClient, getRoomFromCache, addMessageToCache } = require("./redis");
 const { addUser, getUser, deleteUser } = require("./users");
 
 const app = express();
 app.use(express.static(__dirname + "/public"));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 // Serve frontend
 app.get("/", async (req, res) => {
