@@ -62,12 +62,12 @@ subClient.on("error", (err) => {
 
 // Listen for new connection
 io.on("connection", (socket) => {
-  const { token, userId } = socket.handshake.query;
+  // const { token, userId } = socket.handshake.query;
 
-  if (userId) {
-    addConnectedUser(+userId);
-    io.emit("usersPresenceList", getConnectedUsers());
-  }
+  // if (userId) {
+  //   addConnectedUser(+userId);
+  //   io.emit("usersPresenceList", getConnectedUsers());
+  // }
 
   // Add listener for "signin" event
   socket.on("signin", async ({ user, room }, callback) => {
@@ -144,10 +144,10 @@ io.on("connection", (socket) => {
       });
     }
 
-    if (userId) {
-      removeConnectedUser(+userId);
-      io.emit("usersPresenceList", getConnectedUsers());
-    }
+    // if (userId) {
+    //   removeConnectedUser(+userId);
+    //   io.emit("usersPresenceList", getConnectedUsers());
+    // }
   });
 });
 // [END cloudrun_websockets_server]
