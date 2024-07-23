@@ -13,17 +13,20 @@
 // limitations under the License.
 
 // [START cloudrun_websockets_redis]
-const REDISHOST = process.env.REDISHOST || 'localhost';
+const REDISHOST = process.env.REDISHOST || "localhost";
 const REDISPORT = process.env.REDISPORT || 6379;
 
 // Instantiate the Redis client
-const redisClient = require('redis').createClient({
+const redisClient = require("redis").createClient({
   url: `redis://${REDISHOST}:${REDISPORT}`,
 });
+
+const subClient = redisClient.duplicate();
 
 // Connect to the Redis server
 (async () => {
   await redisClient.connect();
+  await subClient.connect();
 })();
 // [END cloudrun_websockets_redis]
 
@@ -62,28 +65,28 @@ async function getRoomFromCache(roomName) {
 // Production applications should use a persistent database such as Firestore
 const messageDb = [
   {
-    room: 'my-room',
+    room: "my-room",
     messages: [
-      {user: 'Chris', text: 'Hi!'},
-      {user: 'Chris', text: 'How are you!?'},
-      {user: 'Megan', text: 'Doing well!'},
-      {user: 'Chris', text: "That's great"},
+      { user: "Chris", text: "Hi!" },
+      { user: "Chris", text: "How are you!?" },
+      { user: "Megan", text: "Doing well!" },
+      { user: "Chris", text: "That's great" },
     ],
   },
   {
-    room: 'new-room',
+    room: "new-room",
     messages: [
-      {user: 'Chris', text: 'The project is due tomorrow'},
-      {user: 'Chris', text: 'I am wrapping up the final pieces'},
-      {user: 'Chris', text: 'Are you ready for the presentation'},
-      {user: 'Megan', text: 'Of course!'},
+      { user: "Chris", text: "The project is due tomorrow" },
+      { user: "Chris", text: "I am wrapping up the final pieces" },
+      { user: "Chris", text: "Are you ready for the presentation" },
+      { user: "Megan", text: "Of course!" },
     ],
   },
 ];
 
 // Insert messages into the example database for long term storage
 async function addMessageToDb(data) {
-  const room = messageDb.find(messages => messages.room === data.room);
+  const room = messageDb.find((messages) => messages.room === data.room);
   if (room) {
     // Update room in database
     Object.assign(room, data);
@@ -95,11 +98,12 @@ async function addMessageToDb(data) {
 
 // Query the example database for messages for a specific room
 function getRoomFromDatabase(roomName) {
-  return messageDb.find(messages => messages.room === roomName);
+  return messageDb.find((messages) => messages.room === roomName);
 }
 
 module.exports = {
   getRoomFromCache,
   addMessageToCache,
   redisClient,
+  subClient,
 };
