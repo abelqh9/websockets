@@ -13,20 +13,20 @@
 // limitations under the License.
 
 // Material Design functionality
-mdc.textField.MDCTextField.attachTo(document.querySelector('.name'));
-mdc.textField.MDCTextField.attachTo(document.querySelector('.room'));
-mdc.ripple.MDCRipple.attachTo(document.querySelector('.signin'));
-mdc.ripple.MDCRipple.attachTo(document.querySelector('.send'));
+mdc.textField.MDCTextField.attachTo(document.querySelector(".name"));
+mdc.textField.MDCTextField.attachTo(document.querySelector(".room"));
+mdc.ripple.MDCRipple.attachTo(document.querySelector(".signin"));
+mdc.ripple.MDCRipple.attachTo(document.querySelector(".send"));
 
 // Hide Chatroom on start
 $(document).ready(() => {
-  $('#chatroom').hide();
+  $("#chatroom").hide();
 });
 
 // [START cloudrun_websockets_initialization]
 // Initialize Socket.io
-const socket = io('', {
-  transports: ['websocket'],
+const socket = io("", {
+  transports: ["websocket"],
 });
 // [END cloudrun_websockets_initialization]
 
@@ -34,12 +34,12 @@ const socket = io('', {
 let user;
 let room;
 // Submit signin form
-$('#signin').submit(e => {
+$("#signin").submit((e) => {
   e.preventDefault();
-  user = $('#name').val();
-  room = $('#room').val();
+  user = $("#name").val();
+  room = $("#room").val();
   // Emit "signin" event with user name and chat room
-  socket.emit('signin', {user, room}, (error, history) => {
+  socket.emit("signin", { user, room }, (error, history) => {
     if (error) {
       console.error(error);
     } else {
@@ -47,25 +47,25 @@ $('#signin').submit(e => {
       if (history) addHistory(history.messages);
       // Load chat room messages
       setChatroom(room);
-      $('#signin').hide();
-      $('#chatroom').show();
+      $("#signin").hide();
+      $("#chatroom").show();
       window.scrollTo(0, document.body.scrollHeight);
     }
   });
 });
 
 // Submit chat message
-$('#chat').submit(e => {
+$("#chat").submit((e) => {
   e.preventDefault();
-  const msg = $('#msg').val();
+  const msg = $("#msg").val();
   // [START cloudrun_websockets_emit]
   // Emit "sendMessage" event with message
-  socket.emit('sendMessage', msg, error => {
+  socket.emit("sendMessage", msg, (error) => {
     if (error) {
       console.error(error);
     } else {
       // Clear message
-      $('#msg').val('');
+      $("#msg").val("");
     }
   });
   // [END cloudrun_websockets_emit]
@@ -73,25 +73,27 @@ $('#chat').submit(e => {
 
 // [START cloudrun_websockets_listen]
 // Listen for new messages
-socket.on('message', msg => {
+socket.on("message", (msg) => {
+  console.log("recibimos un mensaje", msg);
   log(msg.user, msg.text);
 });
 
 // Listen for notifications
-socket.on('notification', msg => {
+socket.on("notification", (msg) => {
+  console.log("recibimos una notificacion", msg);
   log(msg.title, msg.description);
 });
 
 // Listen connect event
-socket.on('connect', () => {
-  console.log('connected');
+socket.on("connect", () => {
+  console.log("connected");
 });
 // [END cloudrun_websockets_listen]
 
 // Listen for disconnect event
-socket.on('disconnect', err => {
-  console.log('server disconnected: ', err);
-  if (err === 'io server disconnect') {
+socket.on("disconnect", (err) => {
+  console.log("server disconnected: ", err);
+  if (err === "io server disconnect") {
     // Reconnect manually if the disconnection was initiated by the server
     socket.connect();
   }
@@ -99,10 +101,10 @@ socket.on('disconnect', err => {
 
 // [START cloudrun_websockets_reconnect]
 // Listen for reconnect event
-socket.io.on('reconnect', () => {
-  console.log('reconnected');
+socket.io.on("reconnect", () => {
+  console.log("reconnected");
   // Emit "updateSocketId" event to update the recorded socket ID with user and room
-  socket.emit('updateSocketId', {user, room}, error => {
+  socket.emit("updateSocketId", { user, room }, (error) => {
     if (error) {
       console.error(error);
     }
@@ -112,18 +114,18 @@ socket.io.on('reconnect', () => {
 
 // Add message history in chat room
 function addHistory(messages) {
-  messages.forEach(message => {
+  messages.forEach((message) => {
     log(message.user, message.text);
   });
 }
 
 // Helper function to set chatroom name
 function setChatroom(room) {
-  $('#chatroom h1').append(room);
+  $("#chatroom h1").append(room);
 }
 
 // Helper function to print to chatroom
 function log(name, msg) {
-  $('#messages').append(`<li> <strong>${name}</strong>: ${msg}`);
+  $("#messages").append(`<li> <strong>${name}</strong>: ${msg}`);
   window.scrollTo(0, document.body.scrollHeight);
 }

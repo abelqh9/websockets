@@ -105,9 +105,12 @@ io.on("connection", (socket) => {
 
   // Add listener for "sendMessage" event
   socket.on("sendMessage", (message, callback) => {
+    console.log("____message is ", message);
+
     // Retrieve user's name and chat room  from socket ID
     const { user, room } = getUser(socket.id);
     if (room) {
+      console.log("____room is ", room);
       const msg = { user, text: message };
       // Push message to clients in chat room
       io.in(room).emit("message", msg);
