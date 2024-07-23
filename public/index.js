@@ -25,7 +25,7 @@ $(document).ready(() => {
 
 // [START cloudrun_websockets_initialization]
 // Initialize Socket.io
-const socket = io("", {
+const socket = io("https://chat-app-uayhhasnqa-rj.a.run.app/", {
   transports: ["websocket"],
 });
 // [END cloudrun_websockets_initialization]
