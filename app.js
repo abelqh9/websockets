@@ -31,7 +31,7 @@ app.post("/toEmit", async (req, res) => {
   console.log("body is ", req.body);
   if (req.body.to) {
     for (const toElement of req.body.to) {
-      io.to(toElement).emit(req.body.event.name, req.body.event.data);
+      io.in(toElement).emit(req.body.event.name, req.body.event.data);
     }
   } else {
     io.emit(req.body.event.name, req.body.event.data);
