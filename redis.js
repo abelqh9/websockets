@@ -18,7 +18,12 @@ const REDISPORT = process.env.REDISPORT || 6379;
 
 // Instantiate the Redis client
 const redisClient = require("redis").createClient({
-  url: `redis://${REDISHOST}:${REDISPORT}`,
+  // url: `redis://${REDISHOST}:${REDISPORT}`,
+  socket: {
+    host: "redis-17886.c284.us-east1-2.gce.redns.redis-cloud.com",
+    port: 17886,
+  },
+  password: "MaJJm93KUZ3RhcgKRq415ANOYtb7Td26",
 });
 
 const subClient = redisClient.duplicate();
